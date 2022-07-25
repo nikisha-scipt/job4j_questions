@@ -12,7 +12,7 @@
 <h3>Junior</h3>
     <ul>
         <li><a href="https://github.com/nikisha-scipt/job4j_questions/blob/master/junior/CollectionPro.md#collections-pro">collections level-2 </a></li>
-        <li><a href="#">io</a></li>
+        <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/junior/io.md">io</a></li>
         <li><a href="#">sql</a></li>
         <li><a href="#">gc</a></li>
         <li><a href="#">solid</a></li>
