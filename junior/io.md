@@ -140,6 +140,8 @@ IO API – (Input & Output) в первую очередь это Java API, ко
 
 [Основные отличия Java IO и Java NIO](https://habr.com/ru/post/235585/)
 
+[Внутренне устройство ByteBuffer и методы](https://www.baeldung.com/java-bytebuffer)
+
 Example:
 ```java
 RandomAccessFile aFile = new RandomAccessFile("data/nio-data.txt", "rw");
@@ -209,11 +211,68 @@ Scanner stringScanner = new Scanner("здесь строка"); // получа�
 Byte streams работает с данными побайтово (8 bits). Например, FileInputStream используется для чтения и FileOutputStream для записи.
 Byte streams интерфейс, который внутри основан на байтовом массиве. В основе находится некий буфер который заполняется, вычитывается и заново заполняется.
 
+1) Байтовый поток в Java - это объект InputStream/OutputStream. 2) В потоке можно прочитать или записать один или несколько байтов. 3) Внутри есть абстрактный метод read() / write(int b), для чтения/записи одного байта. Реализация этого метода и определяет фактическую реализацию потока.
+
+Запись:
+```java
+ try (FileOutputStream out = new FileOutputStream("result.txt")) {
+            out.write("Hello, world!".getBytes());
+            out.write(System.lineSeparator().getBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+```
+
+Чтение:
+```java
+try (FileInputStream in = new FileInputStream("input.txt")) {
+            StringBuilder text = new StringBuilder();
+            int read;
+            while ((read = in.read()) != -1) {
+                text.append((char) read);
+            }
+            System.out.println(text);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+```
+
 [к оглавлению](#input-output)
 
 ## Символьный поток
 В Java, символы хранятся в кодировке Unicode (16 bit). Символный поток позволяет читать данные символ за символом. Для пример FileReader и FileWriter символьные потоки.
 Можно задать свою кодировку
+
+Как он реализован внутри? 1) Символьный поток в Java - это объект Reader/Writer. 2) В потоке можно прочитать или записать один или несколько символов (char, 2 байта). Реализация этого метода и определяет фактическую реализацию работы объекта.
+
+Чтение:
+```java
+try (FileReader in = new FileReader("input.txt")) {
+            in.lines().forEach(System.out::println);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+```
+
+Запись:
+```java
+String data = "This is the data in the output file";
+
+    try {
+      // Creates a FileWriter
+      FileWriter output = new FileWriter("output.txt");
+
+      // Writes the string to the file
+      output.write(data);
+
+      // Closes the writer
+      output.close();
+    }
+
+    catch (Exception e) {
+      e.getStackTrace();
+    }
+```
 
 [к оглавлению](#input-output)
 
