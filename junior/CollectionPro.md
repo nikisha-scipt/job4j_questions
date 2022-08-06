@@ -170,7 +170,7 @@ public class TestClass {
   такие как вставка (add, addAll), удаление (remove, removeAll, clear), поиск (contains)
 + **Map** -  описывает коллекцию, состоящую из пар "ключ — значение". У каждого ключа только одно значение
 
-![img.png](img/img_3.png)
+![img.png](img/collection/pack-collect.png)
 
 На вершине иерархии в Java Collection Framework располагаются 2 интерфейса: `Collection` и `Map`. Эти интерфейсы разделяют все коллекции, входящие во фреймворк на две части по типу хранения данных: простые последовательные наборы элементов и наборы пар «ключ — значение» соответственно.
 
@@ -289,7 +289,7 @@ public class TestClass {
   Время доступа и извлечения элементов достаточно мало, что делает класс TreeMap блестящим выбором для хранения больших
   объемов отсортированной информации
 
-![img_1.png](img/img_1.png)
+![img_1.png](img/collection/map-put.png)
 hk = 31 * 17 * Object.field;
 
 hf = hk ^ (hk >>> 16)
@@ -325,9 +325,9 @@ n - количество входных данных
 + **Деревья** для всех операций - O(log(n)).
   Хэш таблицы - O(1) для всех операций, если не считать коллизии
 
-![img.png](img/img.png)
+![img.png](img/collection/bigO.png)
 
-![img_2.png](img/img_2.png)
+![img_2.png](img/collection/bigO-sort.png)
 
 [к оглавлению](#collections-pro)
 
