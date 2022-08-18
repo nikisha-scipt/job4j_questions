@@ -15,7 +15,7 @@
         <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/junior/io.md">io</a></li>
         <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/junior/sql.md">sql</a></li>
         <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/junior/gc.md">gc</a></li>
-        <li><a href="#">solid</a></li>
+        <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/junior/solid.md">solid</a></li>
     </ul>
 <h3>Middle</h3>
     <ul>

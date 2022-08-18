@@ -4,7 +4,7 @@
 2) [Расскажите о принципах KISS, DRY, YAGNI?](#расскажите-о-принципах-kiss-dry-yagni)
 3) [Что такое SOLID?](#что-такое-solid)
 4) [Для чего используется JavaDoc?](#для-чего-используется-javadoc)
-5) [Как писать JavaDoc? Опишите основные теги @param, @return, @throws.](#как-писать-javadoc-опишите-основные-теги-@param-@return-@throws)
+5) [Как писать JavaDoc? Опишите основные теги @param, @return, @throws.](#как-писать-javadoc-опишите-основные-теги-param-return-throws)
 6) [Что такое Java code convention?](#что-такое-java-code-convention)
 7) [Расскажите про принципы составления Java класса.](#расскажите-про-принципы-составления-java-класса)
 8) [Что такое SRP?](#что-такое-srp)
@@ -48,7 +48,7 @@
 
 [к оглавлению](#solid)
 
-## Как писать javadoc опишите основные теги @param @return @throws
+## Как писать javadoc опишите основные теги param return throws
 
 [к оглавлению](#solid)
 
