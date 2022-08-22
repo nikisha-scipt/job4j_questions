@@ -1,14 +1,12 @@
 package ru.script;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
+       try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(args[0])));
              PrintWriter writer = new PrintWriter(new BufferedOutputStream(new FileOutputStream(args[1])))
         ) {
             StringBuilder sb = new StringBuilder();
