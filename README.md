@@ -4,7 +4,7 @@
 <h1>Содержимое проекта</h1>
 <h3>Intern</h3>
     <ul>
-        <li><a href="#">basic syntax</a></li>
+        <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/intern/base.md">basic syntax</a></li>
         <li><a href="#">OOP</a></li>
         <li><a href="https://github.com/nikisha-scipt/job4j_questions/blob/master/intern/CollectionLite.md">collections level-1 </a></li>
         <li><a href="#">stream API</a></li>
