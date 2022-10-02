@@ -490,6 +490,8 @@ CyclicBarrier похож на CountDownLatch, но главное различи
 
 Barrier накапливает потоке в точке вызова await() пока их количество не превысит заданное. CountDownLatch ждет пока количество вызовов countDown() не превысит нужное, и тогда разблокирует await().
 
+[https://habr.com/ru/post/277669/](https://habr.com/ru/post/277669/)
+
 [к оглавлению](#multithreading)
 
 ## Отличие threadstart и threadrun
