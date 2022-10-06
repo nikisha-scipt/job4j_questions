@@ -33,7 +33,7 @@ public class Main {
                 sb = new StringBuilder();
             }
             firstList.addAll(secondList);
-            writer.println("## " + args[1] + "\n");
+            writer.println("### " + args[1] + "\n");
             firstList.forEach(writer::println);
 
         } catch (IOException e) {
