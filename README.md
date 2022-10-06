@@ -20,7 +20,7 @@
 <h3>Middle</h3>
     <ul>
         <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/middle/multithreading.md">multithreading</a></li>
-        <li><a href="#">web</a></li>
+        <li><a href="https://github.com/nikisha-script/job4j_questions/blob/master/middle/web.md">web</a></li>
         <li><a href="#">hibernate</a></li>
         <li><a href="#">spring</a></li>
         <li><a href="#">microservices</a></li>
