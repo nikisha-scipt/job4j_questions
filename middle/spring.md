@@ -6,7 +6,7 @@
 4) [Перечислите способы инъекций зависимостей.](#перечислите-способы-инъекций-зависимостей)
 5) [Что такое ApplicationContext? Когда он создается?](#что-такое-applicationcontext-когда-он-создается)
 6) [Расскажите, что такое Spring Bean? Опишите жизненный цикл Spring Bean?](#расскажите-что-такое-spring-bean-опишите-жизненный-цикл-spring-bean)
-7) [Объясните для чего используются аннотации @Autowired @Qualifier. Когда, какой нужно использовать?](#объясните-для-чего-используются-аннотации-@autowired-@qualifier-когда-какой-нужно-использовать)
+7) [Объясните для чего используются аннотации @Autowired @Qualifier. Когда какой нужно использовать?](#объясните-для-чего-используются-аннотации-autowired-qualifier-когда-какой-нужно-использовать)
 8) [Что такое FactoryBeans?](#что-такое-factorybeans)
 9) [Что такое Profiles? Когда их используют.](#что-такое-profiles-когда-их-используют)
 10) [Расскажите про модуль Spring AOP.](#расскажите-про-модуль-spring-aop)
@@ -18,7 +18,7 @@
 16) [Объясните верхнеуровневую архитектуру Spring MVC: Dispatcher, ViewResolver.](#объясните-верхнеуровневую-архитектуру-spring-mvc-dispatcher-viewresolver)
 17) [Как конфигурировать Spring MVC?](#как-конфигурировать-spring-mvc)
 18) [Что такое Spring scope? Какие типы Spring scope существуют?](#что-такое-spring-scope-какие-типы-spring-scope-существуют)
-19) [Расскажите про аннотации @RequestMapping, @PathVariable, @RequestBody, @RequestParam, @ModelAttribute, @ResponseBody, @SessionAttribute, @CookieValue.](#расскажите-про-аннотации-@requestmapping-@pathvariable-@requestbody-@requestparam-@modelattribute-@responsebody-@sessionattribute-@cookievalue)
+19) [Расскажите про аннотации @RequestMapping, @PathVariable, @RequestBody, @RequestParam, @ModelAttribute, @ResponseBody, @SessionAttribute, @CookieValue.](#расскажите-про-аннотации-requestmapping-pathvariable-requestbody-requestparam-modelattribute-responsebody-sessionattribute-cookievalue)
 20) [Расскажите про модуль Spring Security?](#расскажите-про-модуль-spring-security)
 21) [Как конфигурировать Spring Security?](#как-конфигурировать-spring-security)
 22) [Что такое UserDetails?](#что-такое-userdetails)
@@ -53,7 +53,7 @@
 ## Расскажите что такое spring bean опишите жизненный цикл spring bean
 
 [к оглавлению](#spring)
-## Объясните для чего используются аннотации @autowired @qualifier когда какой нужно использовать
+## Объясните для чего используются аннотации autowired qualifier когда какой нужно использовать
 
 [к оглавлению](#spring)
 ## Что такое factorybeans
@@ -89,7 +89,7 @@
 ## Что такое spring scope какие типы spring scope существуют
 
 [к оглавлению](#spring)
-## Расскажите про аннотации @requestmapping @pathvariable @requestbody @requestparam @modelattribute @responsebody @sessionattribute @cookievalue
+## Расскажите про аннотации requestmapping pathvariable requestbody requestparam modelattribute responsebody sessionattribute cookievalue
 
 [к оглавлению](#spring)
 ## Расскажите про модуль spring security
