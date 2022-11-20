@@ -425,7 +425,7 @@ public class ProfilesIntegrationTest {
 
 [к оглавлению](#spring)
 ## Что такое spring scope какие типы spring scope существуют
-![img_1.png](img/scope.png)
+![](img/scope.png)
 
 [к оглавлению](#spring)
 ## Расскажите про аннотации requestmapping pathvariable requestbody requestparam modelattribute responsebody sessionattribute cookievalue
