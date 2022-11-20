@@ -34,6 +34,9 @@
 32) [Что такое коды состояния HTTP?](#что-такое-коды-состояния-http)
 
 
+[https://habr.com/ru/post/470305/](https://habr.com/ru/post/470305/)
+
+
 
 ## Что такое spring какие основные задачи выполняет этот фреймворк
 По сути Spring Framework с открытым исходным кодом представляет собой просто контейнер внедрения зависимостей, с несколькими удобными слоями (например: доступ к базе данных, прокси, аспектно-ориентированное программирование, RPC, веб-инфраструктура MVC). Это все позволяет вам быстрее и удобнее создавать Java-приложения.
@@ -152,6 +155,9 @@ public class MyApplication {
 
 [к оглавлению](#spring)
 ## Расскажите что такое spring bean опишите жизненный цикл spring bean
+Spring-бины − это классы, созданием экземпляров которых и установкой в них зависимостей управляет контейнер фреймворка Spring. Бины предназначены для реализации бизнес-логики приложения. Spring Bean представляет собой singleton, то есть в некотором блоке приложения существует только один экземпляр данного класса.
+
+
 Полный жизненный цикл состоит из:
 Представлен из BeanDefinition (это тоже соответствующие объекты, которые реализуют BeanDefinition) далее они попадают в IoC container, который сразу же направляет их в BeanFactoryPostProcessor, они нужны для того, чтобы подкрутить наши BeanDefinition, например, подкрутить наши app.properties. Далее должны отсортировать наши BeanDefinition таким образом, осуществлялась зависимость между ними, потому что один BeanDefinition нельзя проинициализировать до инициализации другого BeanDefinition, если у первого есть зависимость на второй. Далее по одному (forEach) начинается этап инициализации. Вызывается конструктор у соответствующего BeanDefinition, далее вызываются соответствующие сетеры и после сеттеров используется BPP - before(postProcessBeforeInitialization(Object bean, String beanName)) и в него уже попадает не BeanDefinition, а Bean и в нем уже будут заинжекшены соответствующие зависимости. Далее как прошли все postProcessBeforeInitialization, вызывается InittializationCallback(если мы используем, например @PostConstructor). Далее вызывается второй метод у BPP - after(postProcessAfterInitialization(Object bean, String beanName)) у тех же самых бинов с тем же самым id, но в нем уже bean может быть изменен на первой фазе bpp или callback-ов. На этой фазе часто используется прокси или подмена других бинов. И после всех фаз мы получаем готовые бины и если это синглтон то он остается в IoC Container, если другой Scope то мы сразу возвращаем тому кто попросил бин. Только для синголтонов мы можем, по завершению контекста, вызвать Destruction Callback -> @PreDestroy (close()).
 
@@ -175,7 +181,7 @@ BeanFactory - базовый интерфейс для всех ApplicationConte
 
 ![img_2.png](img/lifyCycle.png)
 
-![img.png](second-life-cycle.png)
+![img.png](img/second-life-cycle.png)
 
 [к оглавлению](#spring)
 ## Объясните для чего используются аннотации autowired qualifier когда какой нужно использовать
@@ -188,6 +194,7 @@ BeanPostProcessor(BPP) - интерфейс, который предназнач
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface InjectBean {
+    
     
 }
 
@@ -220,9 +227,182 @@ public class InjectBeanPostProcessor implements BeanPostProcessor, ApplicationCo
 
 [к оглавлению](#spring)
 ## Что такое factorybeans
+FactoryBean — это generic интерфейс, которому можно делегировать процесс создания бинов типа . В те времена, когда конфигурация была исключительно в xml, разработчикам был необходим механизм с помощью которого они бы могли управлять процессом создания бинов. Именно для этого и был сделан этот интерфейс. Для того что бы лучше понять проблему, приведу пример xml конфигурации.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <bean id="redColor" scope="prototype" class="java.awt.Color">
+        <constructor-arg name="r" value="255" />
+        <constructor-arg name="g" value="0" />
+        <constructor-arg name="b" value="0" />
+    </bean>
+    
+</beans>
+```
+На первый взгляд, тут все нормально и нет никаких проблем. А что делать если нужен другой цвет? Создать еще один бин? Не вопрос.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <bean id="redColor" scope="prototype" class="java.awt.Color">
+        <constructor-arg name="r" value="255" />
+        <constructor-arg name="g" value="0" />
+        <constructor-arg name="b" value="0" />
+    </bean>
+
+    <bean id="green" scope="prototype" class="java.awt.Color">
+        <constructor-arg name="r" value="0" />
+        <constructor-arg name="g" value="255" />
+        <constructor-arg name="b" value="0" />
+    </bean>
+    
+</beans>
+```
+
+А что делать если я хочу каждый раз случайный цвет? Вот тут то и приходит на помощь интерфейс FactoryBean.
+
+Создадим фабрику которая будет отвечать за создание всех бинов типа — Color.
+
+```java
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.stereotype.Component;
+
+import java.awt.*;
+import java.util.Random;
+
+/**
+ * User: malahov
+ * Date: 18.04.14
+ * Time: 15:59
+ */
+public class ColorFactory implements FactoryBean<Color> {
+    @Override
+    public Color getObject() throws Exception {
+        Random random = new Random();
+        Color color = new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+        return color;
+    }
+
+    @Override 
+    public Class<?> getObjectType() {
+        return Color.class;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return false;
+    }
+}
+```
+
+Добавим ее в xml и удалим объявленные до этого бины типа — Color.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<bean id="colorFactory" class="com.malahov.temp.ColorFactory"></bean>
+
+</beans>
+```
+
+Теперь создание бина типа Color.class будет делегироваться ColorFactory, у которого при каждом создании нового бина будет вызываться метод getObject.
+
+Для тех кто пользуется JavaConfig, этот интерфейс будет абсолютно бесполезен.
+
+Созданием экземпляров бинов занимается BeanFactory при этом, если нужно, делегирует это кастомным FactoryBean. Экземпляры бинов создаются на основе ранее созданных BeanDefinition.
+
+![img.png](img/Factory-bean.png)
 
 [к оглавлению](#spring)
 ## Что такое profiles когда их используют
+Profile представляет из себя метку и на основании этой метки мы можем активировать или дезактивировать бины или целые конфигурации.
+
+```java
+@Bean
+@Profile("prod|web") // ! | &
+public UserRepo userRepo() {
+            return new UserReport(); 
+}
+```
+Если метки prod или web -> то будет создан бин UserRepo;
+И так же @Profile можем добавлять к @Configuration, и класс-конфиг продгрузится при активной метке @Profile
+
+Активация:
+- .properties: 
+```properties
+    spring.profiles.active=prod
+```
+- через Context: 
+```java
+    var context = new AnnotationConfigApplicationContext();
+    context.register(Config.class); // создать ридеры
+    context.getEnvironment().setActiveProfiles("prod", "web");
+    context.refresh(); // прогнать через жизненный цикл бинов
+```
+
+Профили Spring позволяют разделить части конфигурации вашего приложения и сделать их доступными только в определенных средах. Любой @Component или @Configuration можно пометить @Profile для ограничения при загрузке:
+
+```java
+@Configuration
+@Profile("production")
+public class ProductionConfiguration {
+
+    // ...
+
+}
+```
+
+В обычном способе Spring вы можете использовать свойство Spring.profiles.active Environment, чтобы указать, какие профили активны. Вы можете указать свойство любым из обычных способов, например, вы можете включить его в свой application.properties:
+```properties
+spring.profiles.active=dev,hsqldb
+```
+или указать в командной строке с помощью переключателя
+```properties
+--spring.profiles.active=dev,hsqldb
+```
+
+
+Допустим, нам нужно создавать определенный бин только для определенного профиля. Для этого можно аннотировать бин с помощью @Profile. Аннотация применима как к классу, так и к методу.
+
+```java
+@Profile("test")
+@Component
+public class ExampleTestBean {
+}
+```
+Проверим, что бин действительно создается. Мы активировали профиль test, внедрили бин ExampleTestBean и проверили, что он не нулевой:
+```java
+@ActiveProfiles("test")
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class ProfilesIntegrationTest {
+    @Autowired
+    Environment environment;
+    @Autowired
+    ExampleTestBean testBean;
+    @Test
+    public void testSpringProfiles() {
+        for (final String profileName : environment.getActiveProfiles()) {
+        System.out.println("Currently active profile - " + profileName);
+    }
+    Assert.assertEquals("test", environment.getActiveProfiles()[0]);
+    assertNotNull(testBean);
+    }
+}
+```
 
 [к оглавлению](#spring)
 ## Расскажите про модуль spring aop
@@ -250,6 +430,7 @@ public class InjectBeanPostProcessor implements BeanPostProcessor, ApplicationCo
 
 [к оглавлению](#spring)
 ## Что такое spring scope какие типы spring scope существуют
+![img_1.png](img/scope.png)
 
 [к оглавлению](#spring)
 ## Расскажите про аннотации requestmapping pathvariable requestbody requestparam modelattribute responsebody sessionattribute cookievalue
