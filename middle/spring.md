@@ -279,11 +279,6 @@ import org.springframework.stereotype.Component;
 import java.awt.*;
 import java.util.Random;
 
-/**
- * User: malahov
- * Date: 18.04.14
- * Time: 15:59
- */
 public class ColorFactory implements FactoryBean<Color> {
     @Override
     public Color getObject() throws Exception {
