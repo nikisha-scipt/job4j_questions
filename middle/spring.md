@@ -34,7 +34,9 @@
 32) [Что такое коды состояния HTTP?](#что-такое-коды-состояния-http)
 
 
-[https://habr.com/ru/post/470305/](https://habr.com/ru/post/470305/)
+Links:
+- [https://habr.com/ru/post/470305/](https://habr.com/ru/post/470305/)
+- [Этапы инициализации контекста Spring](https://habr.com/ru/post/222579/)
 
 
 
@@ -416,6 +418,48 @@ public class ProfilesIntegrationTest {
 
 [к оглавлению](#spring)
 ## Расскажите о модуле spring mvc
+Spring MVC реализует шаблон проектирования MVC. То есть удобным образом связывает данные и вид.
+Шаблон MVC позволяет отдельно разрабатывать логику или изменять пользовательский интерфейс.
+![img.png](img/mvc.png)
+
+Все запросы принимает DispatcherServlet. DispatcherServlet загружается с помощью сервера контейнера (Tomcat, Jetty)
+
+Сервер-контейнер поставляется совместно с библиотеками Spring, что позволяет сразу запустить приложение без дополнительных настроек сервера.
+
+DispatcherServlet поднимает контекст зависимостей Spring. По сути DispatcherServlet является входной точкой всего приложения.
+
+HandlerMapping служит для связи конкретного запроса и контроллера. Все запросы первоначально обрабатываться в DispatcherSerlvet и перераспределяются через HandlerMapping конкретному контроллеру.
+
+ViewResolver - это объект, который содержит имя шаблона. Шаблон используется генератором HTML (JSP, Thymeleaf). Генератор заполняет шаблон на основании модели и возвращает в ViewResolver HTML.
+
+В качестве формата данных может выступать JSON, XML, Byte, HTML.
+
+Spring MVC построен вокруг центрального сервлета, который распределяет запросы по контроллерам, а также предоставляет другие широкие возможности при разработке веб приложений. На самом деле DispatcherServlet — полностью интегрированный сервлет в Spring IoC контейнер и таким образом получает доступ ко всем возможностям Spring.
+
+DispatcherServlet — это обычный сервлет (наследуется от базового класса HttpServlet), и его также необходимо описывать в web.xml вашего веб приложения. Вам необходимо указать мэппинг запросов, которые будут обрабатываться в DispatcherServlet, путем указания URL в web.xml. Ниже показана стандартная конфигурация Java EE необходимая для настройки DispatcherServlet:
+```xml
+
+<web-app>
+    <servlet>
+        <servlet-name>example</servlet-name>
+        <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+ 
+    <servlet-mapping>
+        <servlet-name>example</servlet-name>
+        <url-pattern>/example/*</url-pattern>
+    </servlet-mapping>
+ 
+</web-app>
+```
+
+![img.png](img/DispatcherServlet.png)
+
+- Вначале DispatcherServlet (диспетчер сервлетов) получает запрос, далее он смотрит свои настройки, чтобы понять какой контроллер использовать (на рисунке Handler Mapping).
+- После получения имени контроллера запрос передается в него (на рисунке Controller). В контроллере происходит обработка запроса и обратно посылается ModelAndView (модель — сами данные; view (представление) — как эти данные отображать).
+- DispatcherServlet на основании полученного ModelAndView ищет какое представление ему использовать (View Resolver) и получает в ответе имя представления View
+- В представление передаются данные (model) и обратно, если необходимо, посылается ответ от представления.
 
 [к оглавлению](#spring)
 ## Объясните верхнеуровневую архитектуру spring mvc dispatcher viewresolver
@@ -468,5 +512,57 @@ public class ProfilesIntegrationTest {
 
 [к оглавлению](#spring)
 ## Что такое коды состояния http
+
+[к оглавлению](#spring)
+
+
+### Spring Boot
+Суть Spring Boot в автоконфигурации и динамического подключения модулей на основании условий с помощью аннотации  @Conditional.
+
+```java
+@Conditional(JpaConditional.class)
+@Configuration
+public class JpaConfig {
+    
+    @PostConstruct
+    void init() {
+        Sytem.out.println("Jpa configuration is enabled");
+    }
+    
+}
+
+class JpaConditional implements Condition {
+    
+    @Override 
+    public boolean mathces(ConditionContext context, AnnotatedTypeMetadata metadata){
+        // Загружаем PostgreSql driver in memory, если класс подгружен в зависимостях (PostgreSQL), то и JpaConfig загрузится
+        try {
+            context.getClassLoader().loadClass("org.postgresql.Driver");
+            return true;
+        } catch (ClassNotFoundException e){
+            return false;
+        }
+    }
+}
+```
+Для создания своего spring boot app (gradle):
+- plugin org.springfraemwork.boot version 2...
+- plugin io.spring.dependency-management version 1.0.11. RELEASE 
+- далее подключаем стартер: в блок dependencies -> spring-boot-starter
+
+не указываем версии, они будут подтягиваться из двух плагинов 
+
+```java
+@SpringBootApplication // обычный Configuration (все сканируется в пакете, где лежит данный класс)
+public class App {
+    public static void main(String[] args) {
+        SpringApplication.run(App.class, args); // this is Context
+        /* var context = SpringApplication.run(App.class, args);
+        System.out.println(context.getBeanDefinitionCount()); */
+    }
+}
+```
+
+@EnableAutoConfiguration (внутри @SpringBootApplication) - подтягивает все автонастройки при удовлетворяющий @Conditional
 
 [к оглавлению](#spring)
