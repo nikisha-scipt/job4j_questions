@@ -420,6 +420,7 @@ public class ProfilesIntegrationTest {
 ## Расскажите о модуле spring mvc
 Spring MVC реализует шаблон проектирования MVC. То есть удобным образом связывает данные и вид.
 Шаблон MVC позволяет отдельно разрабатывать логику или изменять пользовательский интерфейс.
+
 ![img.png](img/mvc.png)
 
 Все запросы принимает DispatcherServlet. DispatcherServlet загружается с помощью сервера контейнера (Tomcat, Jetty)
@@ -555,7 +556,7 @@ HTTP методы GET, PUT, DELETE формально считаются иде�
 [к оглавлению](#spring)
 
 
-### Spring Boot
+# Spring Boot
 Суть Spring Boot в автоконфигурации и динамического подключения модулей на основании условий с помощью аннотации  @Conditional.
 
 ```java
@@ -584,7 +585,7 @@ class JpaConditional implements Condition {
     }
 }
 ```
-Для создания своего spring boot app (gradle):
+#Для создания своего spring boot app (gradle):
 - plugin org.springfraemwork.boot version 2...
 - plugin io.spring.dependency-management version 1.0.11. RELEASE 
 - далее подключаем стартер: в блок dependencies -> spring-boot-starter
@@ -604,8 +605,60 @@ public class App {
 
 @EnableAutoConfiguration (внутри @SpringBootApplication) - подтягивает все автонастройки при удовлетворяющий @Conditional
 
+# Создание своего startera:
+- Создаем пустой проект(стартер), подключаем spring-boot-starter
+- Создаем в нем .properties -> starter-чтото:author:nikisha
+- Создаем проперти конфиг (это не конфигурация)
+```java
+@ConfigurationProperties(prefix = "starter-чтото")
+public class StrarteConfigProperties {
+    private String author;
+}
+```
+- Создаем класс с автоконфигурацией (Когда приложение будет загружено, то и загрузятся все конфиги (по условию))
+```java
+@Configuration
+@EnableConfigurationProperties(StrarteConfigProperties.class)
+public class StarterAutoConfiguration {
+    @Bean
+    public Logic logic(StrarteConfigProperties props) {
+        return new Logic(props);
+    }
+}
+```
+- Чтобы заработал стартер, создаем в данном проекте META-INF -> spring.factories (В нем указываем, какой файл конфига относится к нашему стартеру)
+```properties
+org.srpingframework.boot.autoconfigure.EnableAutoConfiguration=ru.example.com.config.StarterAutoConfiguration (полное имя До конфига)
+```
+- Создаем класс с бизнес-логикой
+```java
+public class Logic {
 
-Log in file :
+    private StrarteConfigProperties props;
+    
+    public Logic(StrarteConfigProperties props) {
+        this.props = props;
+    }
+    
+    public String getMessage() {
+        return String.format("(c) %s %s", LocalDate.now(), props.getAuthor());
+    }
+}
+```
+- Далее mvn install (хранится в локальном репо m2)
+- Далее создаем другой проект spring boot(web)
+- Подключаем зависимость в maven нового проекта (Берем из первого проекта группу, артифакт и версию)
+```maven
+<dependency>
+    <groupId></groupId>
+    <artifactId></artifactId>
+    <version></version>
+</depedency>
+```
+- Все классы будут доступны
+
+
+# Log in file :
 ```properties
     logging.file.name:file.txt
     logging.file.path:/
