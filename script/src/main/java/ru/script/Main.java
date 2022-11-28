@@ -1,7 +1,9 @@
 package ru.script;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class Main {
 
@@ -12,6 +14,8 @@ public class Main {
             StringBuilder sb = new StringBuilder();
             List<String> firstList = new ArrayList<>();
             List<String> secondList = new ArrayList<>();
+
+
             int i = 1;
             for (String read = reader.readLine(); read != null; read = reader.readLine()) {
                 sb.append(read);
@@ -39,7 +43,8 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
 }
+
+
