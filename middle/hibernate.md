@@ -480,7 +480,107 @@ Hibernate предоставляет механизмы для реализац�
 Даже если вы явно перейдете на использование FetchType.LAZY для всех ассоциаций, то вы все равно можете столкнуться с проблемой N + 1. Так как при запросу к данным, сгенерируются запросы 
 
 Решение:
+
 ![img.png](img/n+1.png)
+
+FETCH: Это тип графа по умолчанию. Когда он выбран, атрибуты, указанные узлами атрибутов графа сущностей, обрабатываются как FetchType.EAGER, а атрибуты, которые не указаны, обрабатываются как FetchType.LAZY.
+LOAD: Когда выбран этот тип, атрибуты, указанные узлами атрибутов графа сущности, обрабатываются как FetchType.EAGER, а атрибуты, которые не указаны, обрабатываются в соответствии с их заданным или стандартным FetchType.
+
+```java
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    @EntityGraph(attributePaths = {"stores"}, type = EntityGraph.EntityGraphType.LOAD)
+    List<Product> findAll();
+}
+Hibernate:
+        select
+        product0_.id as id1_7_0_,
+        store2_.id as id1_9_1_,
+        product0_.category_id as category3_7_0_,
+        product0_.product_name as product_2_7_0_,
+        store2_.description as descript2_9_1_,
+        store2_.position as position3_9_1_,
+        stores1_.product_id as product_1_8_0__,
+        stores1_.stores_id as stores_i2_8_0__
+        from
+        product product0_
+        inner join
+        product_stores stores1_
+        on product0_.id=stores1_.product_id
+        inner join
+        store store2_
+        on stores1_.stores_id=store2_.id
+```
+
+NamedEntityGraph:
+
+```java
+@Data
+@Entity
+@NamedEntityGraph(name = Product.WITH_STORES_GRAPH,
+        attributeNodes = @NamedAttributeNode("stores"))
+public class Product {
+    public static final String WITH_STORES_GRAPH = "graph.Product.stores";
+  
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String productName;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    private Set<Store> stores;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Category category;
+}
+```
+
+Repository:
+
+```java
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    @EntityGraph(value = Product.WITH_STORES_GRAPH, type = EntityGraph.EntityGraphType.LOAD)
+    List<Product> findAll();
+}
+```
+
+```java
+@Data
+@Entity
+@NamedEntityGraph(name = Product.WITH_STORES_AND_CITY_GRAPH,
+        attributeNodes = {
+                @NamedAttributeNode(
+                        value = "stores",
+                        subgraph = "city-subgraph"
+                )
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "city-subgraph",
+                        attributeNodes =
+                                {
+                                        @NamedAttributeNode("city")
+                                }
+                )
+        }
+)
+public class Product {
+    public static final String WITH_STORES_AND_CITY_GRAPH = "graph.Product.stores.city";
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    private String productName;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    private Set<Store> stores;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Category category;
+}
+```
 
 ## Виды связей между таблицами в Hibernate и JPA?
 Односторонние и двусторонние отношения в Hibernate
