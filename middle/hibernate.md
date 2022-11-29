@@ -71,19 +71,276 @@ SQL не понимает наследование типов и не подде
 Всего таких стратегий 4:
 
 1) Использовать одну таблицу для каждого класса и полиморфное поведение по умолчанию.
+```java
+@MappedSuperclass
+public class BillingDetails {
+
+    private String owner;
+
+    public BillingDetails() {
+    }
+    // get,set...
+}
+@Entity
+@Table(name = "CREDIT_CARD")
+public class CreditCard extends BillingDetails {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
+  private int id;
+
+  @Column(name = "card_number")
+  private int cardNumber;
+
+  public CreditCard() {
+  }
+    // get,set...
+}
+@Entity
+@Table(name = "BANK_ACCOUNT")
+public class BankAccount extends BillingDetails {
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
+  private int id;
+
+  private int account;
+
+  public BankAccount() {
+  }
+    // get,set...
+}
+```
+Свойства суперкласса по умолчанию будут проигнорированы. Чтобы сохранить их в таблицу конкретного подкласса, необходимо использовать аннотацию @MappedSuperClass.
+
+Этот подход возможно использовать только для верхушки иерархии классов, где:
+
+а) Полиморфизм не нужен (выборку для конкретного подкласса Hibernate будет выполнять в один запрос -> производительность будет высокой)
+
+б) Изменения в суперклассе не предвидятся.
+
+Для приложения, где запросы будут ссылаться на родительский класс BillingDetails эта стратегия не подойдет.
+
 2) Одна таблица для каждого конкретного класса, с полным исключением полиморфизма и отношений наследования из схемы SQL (для полиморфного поведения во время выполнения будут использоваться UNION-запросы)
 ```java
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 ```
+В рамках данной стратегии наличие идентификатора в суперклассе является обязательным требованием (в первом примере мы обошлись без него).
+
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class BillingDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private int id;
+
+    private String owner;
+
+    public BillingDetails() {
+    }
+}
+
+@Entity
+@Table(name = "CREDIT_CARD")
+public class CreditCard extends BillingDetails {
+
+  @Column(name = "card_number")
+  private int cardNumber;
+
+  public CreditCard() {
+  }
+}
+
+@Entity
+@Table(name = "BANK_ACCOUNT")
+public class BankAccount extends BillingDetails {
+
+  @Column(name = "bank_name")
+  private String bankName;
+  public BankAccount() {
+  }
+
+}
+```
+Наша схема SQL по-прежнему ничего не знает о наследовании; между таблицами нет никаких отношений.
+```sql
+Hibernate: 
+    select
+        billingdet0_.id as id1_1_,
+        billingdet0_.owner as owner2_1_,
+        billingdet0_.card_number as card_num1_2_,
+        billingdet0_.exp_month as exp_mont2_2_,
+        billingdet0_.exp_year as exp_year3_2_,
+        billingdet0_.account as account1_0_,
+        billingdet0_.bank_name as bank_nam2_0_,
+        billingdet0_.swift as swift3_0_,
+        billingdet0_.clazz_ as clazz_ 
+    from
+        ( select
+            id,
+            owner,
+            card_number,
+            exp_month,
+            exp_year,
+            null::int4 as account,
+            null::varchar as bank_name,
+            null::varchar as swift,
+            1 as clazz_ 
+        from
+            CREDIT_CARD 
+        union
+        all select
+            id,
+            owner,
+            null::int4 as card_number,
+            null::varchar as exp_month,
+            null::varchar as exp_year,
+            account,
+            bank_name,
+            swift,
+            2 as clazz_ 
+        from
+            BANK_ACCOUNT 
+    ) billingdet0_
+```
+
+Объединение таблиц требует одинаковой структуры столбцов, поэтому вместо несуществующих столбцов были вставлены NULL (например, «null::varchar as bank_name» в credit_card – в таблице кредиток нет названия банка).
+
+
 3) Единая таблица для всей иерархии классов. Возможна только за счет денормализации схемы SQL. Определять суперкласс и подклассы будет возможно посредством различия строк.
 ```java
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 ```
+Иерархию классов можно целиком отобрать в одну таблицу. Она будет содержать столбцы для всех полей каждого класса иерархии. Для каждой записи конкретный подкласс будет определяться значением дополнительного столбца с селектором.
+
+```java
+@Entity
+@Table(name = "BILLING_DETAILS")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "BD_TYPE")
+public abstract class BillingDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private int id;
+
+    private String owner;
+
+    public BillingDetails() {
+    }
+}
+@Entity
+@DiscriminatorValue("BA")
+public class BankAccount extends BillingDetails {
+
+  @Column(name = "bank_name")
+  private String bankName;
+  
+  public BankAccount() {
+  }
+}
+
+@Entity
+@DiscriminatorValue("CC")
+public class CreditCard extends BillingDetails {
+
+  @Column(name = "card_number")
+  private int cardNumber;
+
+  public CreditCard() {
+  }
+}
+```
+Каждый класс иерархии может указать свое значение селектора с помощью аннотации @DiscriminatorValue.
+Не стоит пренебрегать явным указанием имени селектора: по умолчанию Hibernate будет использовать полное имя класса или имя сущности (зависит от того, используются ли файлы XML-Hibernate или xml-файлы JPA/аннотации).
+
+```sql
+Hibernate: 
+    select
+        billingdet0_.id as id2_0_,
+        billingdet0_.owner as owner3_0_,
+        billingdet0_.card_number as card_num4_0_,
+        billingdet0_.exp_month as exp_mont5_0_,
+        billingdet0_.exp_year as exp_year6_0_,
+        billingdet0_.account as account7_0_,
+        billingdet0_.bank_name as bank_nam8_0_,
+        billingdet0_.swift as swift9_0_,
+        billingdet0_.BD_TYPE as BD_TYPE1_0_ 
+    from
+        BILLING_DETAILS billingdet0_
+```
+Главным плюсом данной стратегии является производительность. Запросы (как полиморфные, так и неполиморфные) выполняются очень быстро и могут быть легко написаны вручную. Не приходится использовать соединения и объединения. Эволюция схемы также производится очень просто.
+
+
 4) Одна таблица для каждого подкласса, где отношение “is a” представлено в виде «has a», т.е. – связь по внешнему ключу с использованием JOIN.
 ```java
 @Inheritance(strategy = InheritanceType.JOINED)
 ```
+```java
+@Entity
+@Table(name = "BILLING_DETAILS")
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class BillingDetails {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.SEQUENCE)
+  private int id;
+
+  private String owner;
+
+  public BillingDetails() {
+  }
+}
+
+@Entity
+@Table(name = "CREDIT_CARD")
+public class CreditCard extends BillingDetails {
+
+  @Column(name = "card_number")
+  private int cardNumber;
+  
+  public CreditCard() {
+  }
+}
+@Entity
+@Table(name = "BANK_ACCOUNT")
+public class BankAccount extends BillingDetails {
+    
+  @Column(name = "bank_name")
+  private String bankName;
+  
+  public BankAccount() {
+  }
+}
+
+Hibernate:
+        select
+        billingdet0_.id as id1_1_,
+        billingdet0_.owner as owner2_1_,
+        billingdet0_1_.card_number as card_num1_2_,
+        billingdet0_1_.exp_month as exp_mont2_2_,
+        billingdet0_1_.exp_year as exp_year3_2_,
+        billingdet0_2_.account as account1_0_,
+        billingdet0_2_.bank_name as bank_nam2_0_,
+        billingdet0_2_.swift as swift3_0_,
+        case
+        when billingdet0_1_.id is not null then 1
+        when billingdet0_2_.id is not null then 2
+        when billingdet0_.id is not null then 0
+        end as clazz_
+        from
+        BILLING_DETAILS billingdet0_
+        left outer join
+        CREDIT_CARD billingdet0_1_
+        on billingdet0_.id=billingdet0_1_.id
+        left outer join
+        BANK_ACCOUNT billingdet0_2_
+        on billingdet0_.id=billingdet0_2_.id
+```
+
+[https://habr.com/ru/post/337488/](https://habr.com/ru/post/337488/)
 ## Что такое сессия в Hibernate?
 В Hibernate работа с БД осуществляется через объект типа org.hibernate.Session.
 Интерфейс org.hibernate.Session является мостом между приложением и Hibernate. С помощью сессий выполняются все CRUD-операции с объектами-сущностями. Объект типа Session получают из экземпляра типа org.hibernate.SessionFactory, который должен присутствовать в приложении в виде singleton.
