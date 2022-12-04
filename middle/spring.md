@@ -37,7 +37,7 @@
 ## Links:
 - [https://habr.com/ru/post/470305/](https://habr.com/ru/post/470305/)
 - [Этапы инициализации контекста Spring](https://habr.com/ru/post/222579/)
-- [Spring под капотом](https://medium.com/@kirill.sereda/spring-%D0%BF%D0%BE%D0%B4-%D0%BA%D0%B0%D0%BF%D0%BE%D1%82%D0%BE%D0%BC-9d92f2bf1a04#:~:text=%D0%9E%D0%BD%20%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D1%82%D1%81%D1%8F%20%D1%87%D0%B5%D1%80%D0%B5%D0%B7%20BeanDefinitionRegistryPostProcessor%2C%20%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B9,%D1%87%D0%B5%D1%80%D0%B5%D0%B7%20%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8)%20%D0%B8%20%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D1%82%20BeanDefinition.)
+- [Spring под капотом](https://medium.com/@kirill.sereda/spring-%D0%BF%D0%BE%D0%B4-%D0%BA%D0%B0%D0%BF%D0%BE%D1%82%D0%BE%D0%BC-9d92f2bf1a04#:~:text=%D0%9E%D0%BD%20%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D1%82%D1%81%D1%8F%20%D1%87%D0%B5%D1%80%D0%B5%D0%B7%20BeanDefinitionRegistryPostProcessor%2C%20%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B9,%D1%87%D0%B5%D1%80%D0%B5%D0%B7%20%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8)
 
 
 
