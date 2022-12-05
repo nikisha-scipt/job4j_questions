@@ -40,7 +40,6 @@
 - [Spring под капотом](https://medium.com/@kirill.sereda/spring-%D0%BF%D0%BE%D0%B4-%D0%BA%D0%B0%D0%BF%D0%BE%D1%82%D0%BE%D0%BC-9d92f2bf1a04#:~:text=%D0%9E%D0%BD%20%D1%81%D0%BE%D0%B7%D0%B4%D0%B0%D0%B5%D1%82%D1%81%D1%8F%20%D1%87%D0%B5%D1%80%D0%B5%D0%B7%20BeanDefinitionRegistryPostProcessor%2C%20%D0%BA%D0%BE%D1%82%D0%BE%D1%80%D1%8B%D0%B9,%D1%87%D0%B5%D1%80%D0%B5%D0%B7%20%D0%B0%D0%BD%D0%BD%D0%BE%D1%82%D0%B0%D1%86%D0%B8%D0%B8)
 
 
-
 ## Что такое spring какие основные задачи выполняет этот фреймворк
 По сути Spring Framework с открытым исходным кодом представляет собой просто контейнер внедрения зависимостей, с несколькими удобными слоями (например: доступ к базе данных, прокси, аспектно-ориентированное программирование, RPC, веб-инфраструктура MVC). Это все позволяет вам быстрее и удобнее создавать Java-приложения.
 
@@ -404,18 +403,365 @@ public class ProfilesIntegrationTest {
 
 [к оглавлению](#spring)
 ## Расскажите про модуль spring aop
+Модуль AOP в Spring обеспечивает нас такими сущностями, как “перехватчики” (interceptors) для перехвата приложения в определённые моменты. Например, когда выполняется определённый метод, мы можем добавить какую-то функциональность (к примеру, сделать запись в лог-файл приложения) как до, так и после выполнения метода.
+
+Аспектно-ориентированное программирование (АОП) — это парадигма программирования являющейся дальнейшим развитием процедурного и объектно-ориентированного программирования (ООП). Идея АОП заключается в выделении так называемой сквозной функциональности. И так все по порядку, здесь я покажу как это сделать в Java — Spring @AspectJ annotation стиле (есть еще schema-based xml стиль, функциональность аналогичная).
+
+Применяется для:
+- логирование,
+- обработка транзакций,
+- обработка ошибок,
+- авторизация и проверка прав,
+- кэширование
+
+Join point — следующее понятие АОП, это точки наблюдения, присоединения к коду, где планируется введение функциональности.
+
+![img.png](img/jpoint.png)
+
+Pointcut — это срез, запрос точек присоединения, — это может быть одна и более точек. Правила запросов точек очень разнообразные, на рисунке выше, запрос по аннотации на методе и конкретный метод. Правила можно объединять по &&, ||,!
+
+![img.png](img/pointcut.png)
+
+Advice — набор инструкций выполняемых на точках среза (Pointcut). Инструкции можно выполнять по событию разных типов:
+
+- Before — перед вызовом метода
+- After — после вызова метода
+- After returning — после возврата значения из функции
+- After throwing — в случае exception
+- After finally — в случае выполнения блока finally
+- Around — можно сделать пред., пост., обработку перед вызовом метода, а также вообще обойти вызов метода.
+
+на один Pointcut можно «повесить» несколько Advice разного типа.
+
+![img.png](img/advice.png)
+
+Aspect — модуль в котором собраны описания Pointcut и Advice.
+
+![img.png](img/aspect.png)
+
+example:
+```java
+@Service
+public class MyService {
+
+    public void method1(List<String> list) {
+        list.add("method1");
+        System.out.println("MyService method1 list.size=" + list.size());
+    }
+
+    @AspectAnnotation
+    public void method2() {
+        System.out.println("MyService method2");
+    }
+
+    public boolean check() {
+        System.out.println("MyService check");
+        return true;
+    }
+}
+
+@Aspect
+@Component
+public class MyAspect {
+
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Pointcut("execution(public * com.example.demoAspects.MyService.*(..))")
+    public void callAtMyServicePublic() { }
+
+    @Before("callAtMyServicePublic()")
+    public void beforeCallAtMethod1(JoinPoint jp) {
+        String args = Arrays.stream(jp.getArgs())
+                .map(a -> a.toString())
+                .collect(Collectors.joining(","));
+        logger.info("before " + jp.toString() + ", args=[" + args + "]");
+    }
+
+    @After("callAtMyServicePublic()")
+    public void afterCallAt(JoinPoint jp) {
+        logger.info("after " + jp.toString());
+    }
+}
+```
+
+[https://habr.com/ru/post/428548/](https://habr.com/ru/post/428548/)
+
 
 [к оглавлению](#spring)
 ## Объясните шаблон проектирование proxy где он используется в spring
+Паттерн Proxy широко используется в AOP и remoting. Так же часто применятеся по подмене бинов на этапе BPP -> after method. 
+
+Хороший пример использования Proxy — это org.springframework.aop.framework.ProxyFactoryBean.
+
+Эта фабрика создаёт AOP-прокси на основе Spring-бина.
+
+Паттерн Заместитель (Proxy) предоставляет объект-заместитель, который управляет доступом к другому объекту. То есть создается объект-суррогат, который может выступать в роли другого объекта и замещать его.
+
+- при взаимодействии по сети, прокси имитирует поведение объекта для снижения накладных издержек при передачи данных через сеть;
+- когда нужно управлять доступом к ресурсу, создание которого требует больших затрат. Реальный объект создается когда действительно нужен, а до этого все запросы к нему обрабатывает прокси-объект
+
+В Java имеется два способа:
+- встроенное API public class Proxy (dynamic proxy class -> a class that implements) класс должен имплементировать интерфейс
+- библиотека CGLib proxy - ннаследование от классов
+
+JDK dynamic proxy могут перекрывать только public методы. CGLib proxy – кроме public, также и protected методы и package-visible. Соответственно, если мы явно не указали для среза (pointcut) ограничение «только для public методов», то потенциально можем получить неожиданное поведение.
+
+```java
+public interface Batch {
+
+ int totalStudents();
+ void registerStudent(String name);
+}
+
+public class CourseBatch implements Batch{
+
+    private List<String> listOfStudents;
+    public CourseBatch(){
+        listOfStudents = new ArrayList<>();
+    }
+    @Override
+    public int totalStudents() {
+        return listOfStudents.size() + 1;
+    }
+
+    @Override
+    public void registerStudent(String name) {
+        listOfStudents.add(name);
+        System.out.println(" Student name : " + name);
+    }
+}
+
+public class ProxyBatch implements Batch{
+
+    private Batch batch;
+    private static final int TOTAL_STUDENTS_ALLOWED_TO_BATCH = 10;
+
+    public ProxyBatch(Batch batch) {
+        this.batch = batch;
+    }
+
+    @Override
+    public int totalStudents() {
+        return batch.totalStudents();
+    }
+
+    @Override
+    public void registerStudent(String name) {
+        if(TOTAL_STUDENTS_ALLOWED_TO_BATCH >= this.totalStudents()){
+            batch.registerStudent(name);
+        }else{
+            System.out.println("Course batch size is : " + TOTAL_STUDENTS_ALLOWED_TO_BATCH);
+            System.out.println("Batch is full so further students are not allowed ");
+        }
+    }
+
+}
+```
 
 [к оглавлению](#spring)
 ## Объясните как происходит интеграция с jdbc
+Spring framework интегрирует шаблон DAO
+- JDBC：org.springframework.jdbc.core.JdbcTemplate
+- Hibernate3.0：org.springframework.orm.hibernate3.HibernateTemplate
+- JPA：org.springframework.orm.jpa.JpaTemplate
+
+Spring напрямую не работает с базой. Он использует JDBC библиотеки.
+
+Spring оборачивает JDBC в свои классы, делая их удобными для работы. Здесь используется шаблон "Декоратор".
+
+```maven
+ <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>5.3.23</version>
+ </dependency>
+ ```
+```properties
+jdbc.url=jdbc:postgresql://127.0.0.1:5432/test
+jdbc.username=postgres
+jdbc.password=password
+jdbc.driver=org.postgresql.Driver
+```
+```java
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import javax.sql.DataSource;
+
+@Configuration
+@PropertySource("classpath:db.properties")
+@EnableTransactionManagement
+public class JdbcConfig {
+
+    @Bean
+    public DataSource ds(@Value("${jdbc.driver}") String driver,
+                         @Value("${jdbc.url}") String url,
+                         @Value("${jdbc.username}") String username,
+                         @Value("${jdbc.password}") String password) {
+        BasicDataSource ds = new BasicDataSource();
+        ds.setDriverClassName(driver);
+        ds.setUrl(url);
+        ds.setUsername(username);
+        ds.setPassword(password);
+        return ds;
+    }
+
+    @Bean
+    public JdbcTemplate jdbc(DataSource ds) {
+        return new JdbcTemplate(ds);
+    }
+
+}
+```
+
+Spring Data JDBC стремится быть проще, и поэтому отсутствует ленивая загрузка. Помимо этого, отсутствует кеширование, отслеживание "грязных" объектов (dirty tracking) и сессии (session). Если в Spring Data JDBC вы загружаете объект, то он загружается полностью (включая связи) и сохраняется тогда, когда вы сохраняете его в репозиторий.
 
 [к оглавлению](#spring)
 ## Объясните как происходит интеграция с hibernate
+Общие шаги выглядят следующим образом.
+
+- Добавить зависимости для hibernate-entitymanager, hibernate-core и spring-orm.
+- Создать классы модели и передать реализации DAO операции над базой данных. Важно, что DAO классы используют SessionFactory, который внедряется в конфигурации бинов Spring.
+- Настроить конфигурационный файл Spring (смотрите в офф. документации или из примера на этом сайте).
+- Дополнительно появляется возможность использовать аннотацию @Transactional и перестать беспокоиться об управлении транзакцией Hibernate.
+
+
+```maven
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-core</artifactId>
+            <version>5.6.11.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>5.3.23</version>
+        </dependency>
+```
+```java
+import org.apache.commons.dbcp2.BasicDataSource;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.orm.hibernate5.HibernateTransactionManager;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import javax.sql.DataSource;
+import java.util.Properties;
+
+@Configuration
+@PropertySource("classpath:db.properties")
+@EnableTransactionManagement
+public class HbmConfig {
+
+    @Bean
+    public LocalSessionFactoryBean sessionFactory(DataSource ds) {
+        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+        sessionFactory.setDataSource(ds);
+        sessionFactory.setPackagesToScan("ru.job4j.accident.model");
+        Properties cfg = new Properties();
+        sessionFactory.setHibernateProperties(cfg);
+        return sessionFactory;
+    }
+
+    @Bean
+    public PlatformTransactionManager htx(SessionFactory sf) {
+        HibernateTransactionManager tx = new HibernateTransactionManager();
+        tx.setSessionFactory(sf);
+        return tx;
+    }
+}
+```
+
+```java
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import javax.persistence.*;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Entity
+@Table(name = "accident")
+public class Accident {
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String name;
+    private String text;
+    private String address;
+}
+```
+В Spring не нужна реализация кода для получения объектов Session, запуска и фиксации транзакций и обработки исключений Hibernate. Вместо этого используем экземпляр HibernateTemplate.
+
+Spring Framework предоставляет различные подходы для интеграции с Hibernate. Тем не менее, мы наиболее часто будем использовать подход, использующий HibernateTemplate. Есть две основные причины:
+
+- Класс скрывает детали управления сессиями и транзакциями.
+- Предоставляет подход основанный на шаблонах
+
+HibernateTemplate класс скрывает трудности управления сессиями и транзакциями при использовании Hibernate для доступа к данным. Нужно только инициализировать HibernateTemplate путем передачи экземпляра SessionFactory. Spring Framework берет на себя беспокойство за детали связанные с сессиями и транзакциями. Это помогает устранить инфраструктурный код, который может вносить суматоху при увеличении сложности.
+HibernateTemplate, так же как и JdbcTemplate, предоставляет шаблонный подход для доступа к данным. Когда вы используете HibernateTemplate, вы будете работать с callbacks. Обратные вызовы — это единственный механизм в шаблонном подходе, который уведомляет шаблон запускать нужную задачу. Преимущество наличия обратного вызова в том, что там только одна точка входа в слой доступа к данным. И эта точка входа определяется шаблоном, в этом случае HibernateTemplate.
+
+В комментариях дополнили, что использование HibernateTemplate не явлется рекомендуемым. Вместо использования HibernateTemplate из пакета org.springframework.orm рекомендуется использовать декларативный подход (@Transactional). Таким образом фреймворк сам позаботится об операциях open, commit, close, flush.
+
+
+
 
 [к оглавлению](#spring)
 ## Что такое transaction manager где он используется когда он нужен
+jdbc transaction:
+```java
+import java.sql.Connection;
+
+Connection connection = dataSource.getConnection(); // (1)
+
+try (connection) {
+    connection.setAutoCommit(false); // (2)
+    // выполнить несколько SQL-запросов...
+    connection.commit(); // (3)
+
+} catch (SQLException e) {
+    connection.rollback(); // (4)
+}
+```
+В Spring есть @Transactional & TransactionTemplate - обы открывают и закрывают транзакции
+```java
+@Transactional(
+  propagation=TransactionDefinition.NESTED,
+  isolation=TransactionDefinition.ISOLATION_READ_UNCOMMITTED
+)
+```
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private TransactionTemplate template;
+
+    public Long registerUser(User user) {
+        Long id = template.execute(status ->  {
+            // выполнить некоторый SQL, который, например,
+            // вставляет пользователя в базу данных 
+            // и возвращает автогенерированный идентификатор
+          return id;
+        });
+    }
+}
+```
 
 [к оглавлению](#spring)
 ## Расскажите о модуле spring mvc
@@ -465,9 +811,200 @@ DispatcherServlet — это обычный сервлет (наследуетс
 
 [к оглавлению](#spring)
 ## Объясните верхнеуровневую архитектуру spring mvc dispatcher viewresolver
+Диспетчер сервлетов DisptacherServlet Spring’а с помощью ViewResolver определяет какое представление необходимо использовать на основании полученного имени
+ViewResolver — интерфейс, реализуемый объектами, которые способны находить представления View по имени View Name.
 
 [к оглавлению](#spring)
 ## Как конфигурировать spring mvc
+![img.png](img/mvc-xml.png)
+```pom
+<properties>
+    <spring.version>3.2.9.RELEASE</spring.version>
+</properties>
+
+<dependencies>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>${spring.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-web</artifactId>
+        <version>${spring.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>${spring.version}</version>
+    </dependency>
+
+</dependencies>
+```
+```jsp
+<html>
+<body>
+	<h1>Message : ${message}</h1>	
+</body>
+</html>
+```
+
+```java
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+@Controller
+@RequestMapping("/welcome")
+public class HelloController {
+
+	@RequestMapping(method = RequestMethod.GET)
+	public String printWelcome(ModelMap model) {
+
+		model.addAttribute("message", "Spring 3 MVC - Hello World");
+		return "hello";
+
+	}
+	
+}
+
+```
+Содержимое файла mvc-dispatcher-servlet.xml:
+```xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans     
+        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<context:component-scan base-package="com.devcolibri.common.controller" />
+
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/pages/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+</beans>
+```
+НО можно так же использовать JavaConfig
+
+ ![img.png](img/mvc-javaconfig.png)
+
+```java
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.view.InternalResourceViewResolver;
+import org.springframework.web.servlet.view.JstlView;
+
+@Configuration
+@EnableWebMvc
+@ComponentScan("com.devcolibri.common")
+public class WebConfig extends WebMvcConfigurerAdapter {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/WEB-INF/pages/**").addResourceLocations("/pages/");
+    }
+
+    @Bean
+    public InternalResourceViewResolver setupViewResolver() {
+        InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+        resolver.setPrefix("/WEB-INF/pages/");
+        resolver.setSuffix(".jsp");
+        resolver.setViewClass(JstlView.class);
+
+        return resolver;
+    }
+
+}
+```
+
+Аннотации:
+
+- @Configuration — собственно эта аннотация и говорит о том, что данный класс является Java Configuration;
+- @EnableWebMvc — эта аннотация разрешает нашему проекту использовать MVC;
+- @ComponentScan(«com.devcolibri.common») — аналогично тому component-scan который был в mvc-dispatcher-servlet.xml, говорит, где искать компоненты проекта.
+- Bean — указывает на то что это инициализация бина, и он будет создан с помощью DI.
+
+  Теперь нужно зарегистрировать конфигурацию в Spring Context это нам позволит сделать наш класс AppInit:
+
+```java
+package com.devcolibri.common.config;
+
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+public class AppInit extends AbstractAnnotationConfigDispatcherServletInitializer {
+    // Этот метод должен содержать конфигурации которые инициализируют Beans
+    // для инициализации бинов у нас использовалась аннотация @Bean
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class<?>[]{
+                WebConfig.class
+        };
+    }
+
+    // Тут добавляем конфигурацию, в которой инициализируем ViewResolver
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+
+        return new Class<?>[]{
+                WebConfig.class
+        };
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+
+}
+```
+
+Добавим необходимые зависимости и плагины
+
+В pom.xml нужно добавить еще две зависимости:
+```pom
+<dependency>
+    <groupId>javax.servlet</groupId>
+    <artifactId>javax.servlet-api</artifactId>
+    <version>3.0.1</version>
+</dependency>
+
+<dependency>
+    <groupId>jstl</groupId>
+    <artifactId>jstl</artifactId>
+    <version>1.2</version>
+</dependency>
+```
+
+
+А теперь нужно добавить maven-war-plugin с помощтю которого мы сможем отключить необходимость web.xml файла.
+
+```pom
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-war-plugin</artifactId>
+    <configuration>
+        <failOnMissingWebXml>false</failOnMissingWebXml>
+    </configuration>
+</plugin>
+```
 
 [к оглавлению](#spring)
 ## Что такое spring scope какие типы spring scope существуют
@@ -475,36 +1012,218 @@ DispatcherServlet — это обычный сервлет (наследуетс
 
 [к оглавлению](#spring)
 ## Расскажите про аннотации requestmapping pathvariable requestbody requestparam modelattribute responsebody sessionattribute cookievalue
+@requestmapping:
+```java
+@RequestMapping(value = "/ex/foos", method = RequestMethod.GET)
+@ResponseBody
+public String getFoosBySimplePath() {
+    return "Get some Foos";
+}
+```
+@PathVariable:
+```java
+@GetMapping("/api/employees/{id}")
+@ResponseBody
+public String getEmployeesById(@PathVariable String id) {
+    return "ID: " + id;
+}
+```
+
+@RequestBody:
+```java
+@PostMapping("/request")
+public ResponseEntity postController(
+  @RequestBody LoginForm loginForm) {
+ 
+    exampleService.fakeAuthenticate(loginForm);
+    return ResponseEntity.ok(HttpStatus.OK);
+}
+```
+
+@RequestParam:
+```java
+@GetMapping("/api/foos")
+@ResponseBody
+public String getFoos(@RequestParam String id) {
+    return "ID: " + id;
+}
+```
+
+@ModelAttribute:
+```java
+@ModelAttribute
+public void addAttributes(Model model) {
+    model.addAttribute("msg", "Welcome to the Netherlands!");
+}
+```
+
+@ResponseBody:
+```java
+@PostMapping(value = "/content", produces = MediaType.APPLICATION_JSON_VALUE)
+@ResponseBody
+public ResponseTransfer postResponseJsonContent(
+  @RequestBody LoginForm loginForm) {
+    return new ResponseTransfer("JSON Content!");
+}
+```
+
+@SessionAttribute:
+```java
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.util.Assert;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.support.SessionStatus;
+
+@Controller
+@RequestMapping(value = "/booking")
+@SessionAttributes(types = TicketForm.class)
+public class BookTicketController {
+
+    @RequestMapping(method = RequestMethod.GET)
+    public String start(Model model) {
+        // после выхода из start() форма будет скопирована в http session атрибуты благодаря @SessionAttributes(types = TicketForm.class)
+        model.addAttribute(new TicketForm()); 
+        return "booking/booking";
+    }
+
+    @RequestMapping(value = "/movie", method = RequestMethod.POST)
+    public String selectMovie(TicketForm ticketForm) {
+
+        Assert.notNull(ticketForm);
+        Assert.notNull(ticketForm.getMovieId());
+
+        return "booking/customer";
+    }
+
+    @RequestMapping(value = "/customer", method = RequestMethod.POST)
+    public String enterCustomerData(TicketForm ticketForm) {
+
+        Assert.notNull(ticketForm);
+        // movieId не передавался с customer.jsp, но он был сохранен в сессии во время selectMovie()
+        Assert.notNull(ticketForm.getMovieId());
+        Assert.notNull(ticketForm.getLastName());
+
+        return "booking/payment";
+    }
+
+    @RequestMapping(value = "/payment", method = RequestMethod.POST)
+    public String enterPaymentDetails(TicketForm ticketForm) {
+
+        // movieId не передавался с customer.jsp, но он был сохранен в сессии во время selectMovie()
+        Assert.notNull(ticketForm.getMovieId());
+        // lastName не передавался с payment.jsp, но он был сохранен в сессии во время enterCustomerData()
+        Assert.notNull(ticketForm.getLastName());
+        Assert.notNull(ticketForm.getCreditCardNumber());
+
+        return "redirect:/booking/confirmation";
+    }
+
+    @RequestMapping(value = "/confirmation", method = RequestMethod.GET)
+    public String confirmation(SessionStatus status) {
+        status.setComplete(); // очищаем Spring Session в целях безопасности личных данных
+        return "booking/confirmation";
+    }
+
+}
+```
+Среди прочих данных, в методе контроллера может потребоваться значение какого-нибудь Cookie, относящегося к текущей сессии клиента. Для того, чтобы получить нужное значение, достаточно поставить аннотацию @CookieValue перед параметром - и он будет автоматически преобразован к указанному типу данных
+
+@CookieValue:
+```java
+@RequestMapping(value = "/page", method = RequestMethod.POST)
+@ResponseBody
+public String savePage(@CookieValue("JSESSIONID") String cookie) {
+  //---
+}
+```
 
 [к оглавлению](#spring)
 ## Расскажите про модуль spring security
+Spring Security это фреймворк, предоставляющий механизмы построения систем аутентификации и авторизации, а также другие возможности обеспечения безопасности.
+
+Authentication - это процесс проверки того, кем является пользователь
+
+Authorization - это процесс проверки того, к чему у него есть доступ
+
 
 [к оглавлению](#spring)
 ## Как конфигурировать spring security
 
+```pom
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+```
+
+Чтобы подключить Spring Security к проекту нужно создать конфигурационный класс наследующий стардантную имплементацию WebSecurityConfigurer - WebSecurityConfigurerAdapter
+
+![img_1.png](img/security.png)
+
+![img.png](img/userdet.png)
+
+![img.png](img/impluserdetails.png)
+
+Регистрация пользователей
+
+.antMatchers("/user/signUp/**").permitAll()
+.anyRequest()
+.authenticated()
+
+Аутентификация пользователей
+
+.formLogin()
+.loginPage("/auth/login").permitAll()
+.defaultSuccessUrl("/")
+
+Выход пользователей из системы
+
+.logout()
+.logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "POST")) 
+
 [к оглавлению](#spring)
 ## Что такое userdetails
+UserDetails предоставляет необходимую информацию для построения объекта Authentication из DAO объектов приложения или других источника данных системы безопасности. UserDetailsService , чтобы создать UserDetails , когда передано имя пользователя в виде String (или идентификатор сертификата или что-то подобное).
 
 [к оглавлению](#spring)
 ## Расскажите верхнеуровневую архитектуру spring security
+Работа Spring Security в веб приложении начинается с servlet фильтра.
+
+спустимся по огромному стеку вызовов (new Exception().getStackTrace().length == 91) и найдем первое упоминание спринга
+
+Посмотрим что лежит в переменной filterChain
+
+Здесь интересен фильтр springSecurityFilterChain именно он делает всю работу SS в веб части.
+
 
 [к оглавлению](#spring)
 ## Что такое filterchainproxy
+springSecurityFilterChain именно он делает всю работу SS в веб части. Сам DelegatingFilterProxyRegistrationBean не очень интересен, посмотрим кому он делегирует свою работу. Свою работу он делегирует классу FilterChainProxy. Внутри него происходит несколько интересных вещей.
+
+Он подключает необходимые фильтры, которые указываем при переопределении метода configure
 
 [к оглавлению](#spring)
 ## Расскажите о схеме работы пользователь роль
 
 [к оглавлению](#spring)
 ## Расскажите о springcontextholder
+SecurityContextHolder, в нем содержится информация о текущем контексте безопасности приложения, который включает в себя подробную информацию о пользователе(Principal) работающем в настоящее время с приложением. По умолчанию SecurityContextHolder используетThreadLocal для хранения такой информации, что означает, что контекст безопасности всегда доступен для методов исполняющихся в том же самом потоке. Для того что бы изменить стратегию хранения этой информации можно воспользоваться статическим методом класса SecurityContextHolder.setStrategyName(String strategy).
+
+[https://coderlessons.com/articles/java/chto-takoe-securitycontext-i-securitycontextholder-v-spring-security](https://coderlessons.com/articles/java/chto-takoe-securitycontext-i-securitycontextholder-v-spring-security)
 
 [к оглавлению](#spring)
 ## Расскажите об аспектах многопоточного окружения в spring
 
 [к оглавлению](#spring)
 ## Расскажите о тестировании spring приложений
+https://habr.com/ru/post/561520/
 
 [к оглавлению](#spring)
 ## Тестирование spring mvc приложения
+https://habr.com/ru/post/561520/
 
 [к оглавлению](#spring)
 ## Расскажите о мониторинге spring приложений
