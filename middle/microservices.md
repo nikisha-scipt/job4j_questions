@@ -48,6 +48,60 @@
 
 ## Kafka
 
+Kafka передает сообщения в модели pub-sub через свой бинарный протокол по верх TCP/IP.
+Обеспечивает:
+- распределённость;
+- отказоустойчивость;
+- высокая доступность;
+- согласованность данных;
+- высокая производительность;
+- горизонтальная масштабируемость;
+- интегрируемость.
+
+
+![k_img.png](img%2Fk_img.png)
+![k_kluster.png](img%2Fk_kluster.png)
+![k_zookeeper.png](img%2Fk_zookeeper.png)
+Представляют небольшую бд, быстро работает на операции чтения, не очень на запись. Следит за состоянием кластеров, распределяет данные.
+![k_msg.png](img%2Fk_msg.png)
+![k_topic.png](img%2Fk_topic.png)
+![k_partition.png](img%2Fk_partition.png)
+![k_send_part.png](img%2Fk_send_part.png)
+![k_not_balanced.png](img%2Fk_not_balanced.png)
+![k_log_on_file.png](img%2Fk_log_on_file.png)
+![k_log.png](img%2Fk_log.png)
+![k_log_1.png](img%2Fk_log_1.png)
+![k_log_2.png](img%2Fk_log_2.png)
+![k_log_3.png](img%2Fk_log_3.png)
+![k_log_4.png](img%2Fk_log_4.png)
+![k_log_5.png](img%2Fk_log_5.png)
+![k_delete.png](img%2Fk_delete.png)
+![k_dur.png](img%2Fk_dur.png)
+![k_controller.png](img%2Fk_controller.png)
+![k_err.png](img%2Fk_err.png)
+![k_isr_1.png](img%2Fk_isr_1.png)
+![k_isr_2.png](img%2Fk_isr_2.png)
+![k_isr_3.png](img%2Fk_isr_3.png)
+![k_isr_4.png](img%2Fk_isr_4.png)
+![k_isr_5.png](img%2Fk_isr_5.png)
+![k_p_send.png](img%2Fk_p_send.png)
+![k_send_0.png](img%2Fk_send_0.png)
+![k_send_1.png](img%2Fk_send_1.png)
+![k_send_3.png](img%2Fk_send_3.png)
+![k_s_fetch.png](img%2Fk_s_fetch.png)
+![k_s_ser.png](img%2Fk_s_ser.png)
+![k_s_def.png](img%2Fk_s_def.png)
+![k_s_acc.png](img%2Fk_s_acc.png)
+![k_s_to_lead.png](img%2Fk_s_to_lead.png)
+![k_c_1.png](img%2Fk_c_1.png)
+![k_c_2.png](img%2Fk_c_2.png)
+![k_c_3.png](img%2Fk_c_3.png)
+![k_c_4.png](img%2Fk_c_4.png)
+![k_c_5.png](img%2Fk_c_5.png)
+![k_offset.png](img%2Fk_offset.png)
+![k_offset_2.png](img%2Fk_offset_2.png)
+![k_c_msg.png](img%2Fk_c_msg.png)
+
 [к оглавлению](#microservices)
 ## RabbitMQ
 
